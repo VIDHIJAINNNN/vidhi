@@ -1,0 +1,35 @@
+{
+  "summary": "Splash visual polish (custom SVG L→branch logo, Poppins font, tighter letter-spacing) fully verified on the public preview URL + full backend regression PASS (32/32 pytest). SPLASH: [data-testid='splash-logo'] renders with an inline <svg> containing 5 <path> elements (L trunk + 3 curved branch/twig strokes + tip flourish) and 5 <ellipse> leaves + 1 <circle> seed; NO 🌳 tree emoji anywhere on the page. [data-testid='splash-brand'] shows 'LEGACY', [data-testid='splash-tagline'] shows 'Knowledge Never Graduates.', subline 'A Student Knowledge Ecosystem' is visible. Computed styles after Poppins load: brand fontFamily='Poppins-ExtraBold', tagline fontFamily='Poppins-Medium', brand letterSpacing='0.5px' (down from 6, well ≤1 threshold), brand fontSize='46px'. [data-testid='splash-get-started-btn'] navigates to /onboarding on tap after localStorage clear. REGRESSION: POST /api/auth/guest → 'Vidhi Jain'; GET /api/mentors=6; /api/careers=8; career-chat SSE + history all green; login screen renders 'Try Demo (Vidhi Jain)', guest tap routes to /(tabs) with 'Vidhi 👋' greeting on home. Deprecated packages detected: none new — only the pre-existing 'shadow* style props are deprecated' RN-web console warning (theme.ts) still present, unrelated to this iteration.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "shadow style props (global, pre-existing)", "issue": "'shadow*' style props deprecated on react-native-web; still emitted by /app/frontend/src/theme.ts (shadow.medium / shadow.soft) applied via style prop on splash logoCircle, cta, tab bar etc. Non-blocking. Reference: /app/frontend/src/theme.ts"}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_legacy_backend.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "None blocking. Optional (carried over from iteration_2): migrate 'shadow*' style props to 'boxShadow' in /app/frontend/src/theme.ts to silence the RN-web deprecation warning."
+  ],
+  "critical_code_review_comments": [
+    "LegacyLogo.tsx is clean, purely presentational, viewBox 0 0 100 100, props-driven colors — good.",
+    "index.tsx correctly gates fontFamily behind fontsLoaded to avoid tofu; testIDs are placed on the required interactive/text nodes (splash-logo, splash-brand, splash-tagline, splash-get-started-btn).",
+    "letterSpacing 0.5 on brand matches spec; consider also removing the redundant letterSpacing:0.2 on ctaTxt if the tighter look should be consistent across button label — not blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (32/32)", "frontend": "100% (splash visual polish + login/tabs regression verified)"},
+  "seed_data_creation": "None. Backend seed unchanged.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Splash spec locked in: custom SVG under [data-testid='splash-logo'] (paths + ellipses, no tree emoji), Poppins-ExtraBold on brand, Poppins-Medium on tagline, letterSpacing 0.5px on brand. Clear localStorage before visiting '/' to bypass auto-redirect to /(tabs). Guest btn label is 'Try Demo (Vidhi Jain)'. Home greeting testID='home-username' text may include the 👋 sibling emoji so use substring match for 'Vidhi'.",
+  "rca_of_issue": "N/A — iteration verifies successful visual-polish changes; no bugs found."
+}
