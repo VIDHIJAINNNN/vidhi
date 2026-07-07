@@ -1,0 +1,176 @@
+{
+  "project_name": "LEGACY",
+  "tagline": "Knowledge Never Graduates.",
+  "theme_and_archetype": {
+    "domain": "Education, Mentorship, SaaS",
+    "theme": "Light (with one specific Dark emotional impact screen)",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) + Archetype 1 Premium Touch",
+    "vibe": "Apple + Airbnb + Notion + LinkedIn. Clean, premium, modern, minimal, emotional, trustworthy, highly polished."
+  },
+  "color_system": {
+    "primary": {
+      "DEFAULT": "#2563EB",
+      "light": "#60A5FA",
+      "dark": "#1E40AF"
+    },
+    "background": {
+      "DEFAULT": "#FFFFFF",
+      "secondary": "#F8F9FA",
+      "dark_impact": "#0A0F24"
+    },
+    "text": {
+      "primary": "#111827",
+      "secondary": "#6B7280",
+      "inverse": "#FFFFFF"
+    },
+    "accents": {
+      "green": "#10B981",
+      "gold": "#F59E0B",
+      "orange": "#F97316",
+      "purple": "#8B5CF6",
+      "learn_pillar": "#2563EB",
+      "vault_pillar": "#10B981",
+      "career_pillar": "#F59E0B",
+      "community_pillar": "#8B5CF6"
+    }
+  },
+  "typography": {
+    "family": {
+      "sans": "Inter"
+    },
+    "scale": {
+      "h1": "text-4xl font-bold tracking-tight",
+      "h2": "text-3xl font-semibold tracking-tight",
+      "h3": "text-xl font-semibold",
+      "body": "text-base font-normal leading-relaxed",
+      "caption": "text-sm font-medium text-gray-500",
+      "overline": "text-xs font-bold uppercase tracking-widest"
+    }
+  },
+  "spacing_and_layout": {
+    "screen_padding": "px-6",
+    "section_gap": "gap-8",
+    "item_gap": "gap-4",
+    "border_radius": {
+      "card": "rounded-2xl",
+      "button": "rounded-full",
+      "chip": "rounded-full",
+      "image": "rounded-xl"
+    },
+    "shadows": {
+      "soft": "shadow-[0_8px_30px_rgb(0,0,0,0.04)]",
+      "medium": "shadow-[0_8px_30px_rgb(0,0,0,0.08)]",
+      "dark_glow": "shadow-[0_0_40px_rgba(37,99,235,0.4)]"
+    }
+  },
+  "component_patterns": {
+    "buttons": {
+      "primary": "bg-primary text-white rounded-full py-4 px-8 font-semibold shadow-soft",
+      "secondary": "bg-white text-primary border border-gray-200 rounded-full py-4 px-8 font-semibold shadow-sm",
+      "icon": "p-3 rounded-full bg-gray-100 text-primary"
+    },
+    "cards": {
+      "pillar": "p-6 rounded-2xl flex flex-col justify-between h-40 shadow-soft",
+      "mentor": "bg-white p-4 rounded-2xl shadow-soft flex flex-col gap-3 border border-gray-100",
+      "resource": "bg-white rounded-xl shadow-soft overflow-hidden w-48 border border-gray-100"
+    },
+    "chips": {
+      "category": "px-5 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-800 whitespace-nowrap",
+      "achievement": "px-3 py-1 rounded-md bg-amber-50 text-amber-600 text-xs font-bold border border-amber-100"
+    },
+    "tabs": {
+      "bottom_nav": "bg-white border-t border-gray-100 pb-safe pt-3 flex justify-around shadow-[0_-4px_20px_rgb(0,0,0,0.03)]"
+    }
+  },
+  "screens": {
+    "onboarding": {
+      "layout": "Full-screen high-quality illustration, absolute positioned bottom sheet container (bg-white, rounded-t-3xl) with H1, description, dots pagination. Primary CTA 'Continue' filling width."
+    },
+    "home": {
+      "layout": "px-6 pt-12 pb-24. Header with Greeting + Profile Avatar. Search bar. 2x2 Grid for 4 Pillars (Learn, Vault, Career, Community). Banner 'Become a Mentor'. Horizontal scroll for Featured Mentors. Horizontal scroll for Upcoming Workshops. Mini visual for Student Journey."
+    },
+    "learn_mentor_discovery": {
+      "layout": "px-6 pt-12 pb-24. Search bar. Horizontal Category Chips (single horizontal scroller, chip 36pt height, row 56pt). Vertical list of Mentor Cards (Image left, details right, price and 'Book' button bottom)."
+    },
+    "mentor_profile": {
+      "layout": "Large hero image. Floating back button (glassmorphism). Bottom sheet overlapping image (rounded-t-3xl, -mt-8): Name, Verified badge, Achievement Chips. Bio text. Subjects list. Reviews horizontal scroll. Sticky bottom CTA container 'Book Session - $XX'."
+    },
+    "book_session": {
+      "layout": "px-6 pt-12 pb-32. Calendar date picker (horizontal scroll). Time slots (grid of chips). Session type toggle. Payment summary card. Sticky bottom CTA 'Confirm Booking'."
+    },
+    "legacy_vault": {
+      "layout": "pt-12 pb-24. Header px-6. Netflix-style layout: Vertical ScrollView containing multiple horizontal ScrollViews. Categories: Winning Presentations, Debate Speeches, Notes. Resource cards: Cover image, title, author, rating."
+    },
+    "career_compass": {
+      "layout": "px-6 pt-12 pb-24. Grid layout of Career paths. Clicking one opens a detail view with roadmap and AI Q&A chat interface."
+    },
+    "community": {
+      "layout": "px-6 pt-12 pb-24. Segmented control (Workshops, Hackathons, Discussions). Vertical feed of event cards."
+    },
+    "profile": {
+      "layout": "px-6 pt-12 pb-24. User info header. 'My Learning Journey' stats row (Sessions, Resources, Followers). List of menu items: My Bookings, Saved Resources, Vault Contributions, Achievements, Settings."
+    },
+    "impact_screen": {
+      "layout": "Dark mode (bg-[#0A0F24]). Centered glowing tree illustration. 'You Left a Legacy' H1 in white. Stats grid (Mentored, Resources, Won, Impacted). Subtle glow effects and particle animations."
+    }
+  },
+  "media_urls": {
+    "mentors": [
+      {
+        "url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBjb2xsZWdlJTIwc3R1ZGVudCUyMHBvcnRyYWl0JTIwZnJpZW5kbHl8ZW58MHx8fHwxNzgzNDQ0OTkyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Professional female college student mentor"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1544168190-79c17527004f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBjb2xsZWdlJTIwc3R1ZGVudCUyMHBvcnRyYWl0JTIwZnJpZW5kbHl8ZW58MHx8fHwxNzgzNDQ0OTkyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Professional male college student mentor in blue shirt"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1618355776464-8666794d2520?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBjb2xsZWdlJTIwc3R1ZGVudCUyMHBvcnRyYWl0JTIwZnJpZW5kbHl8ZW58MHx8fHwxNzgzNDQ0OTkyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Female graduate mentor"
+      }
+    ],
+    "resources": [
+      {
+        "url": "https://images.unsplash.com/photo-1698434156107-17486c312c50?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxub3RlYm9vayUyMHByZXNlbnRhdGlvbiUyMHN0dWR5aW5nJTIwY2xlYW4lMjBkZXNrfGVufDB8fHx8MTc4MzQ0NDk5MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Notebook presentation studying clean desk"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1698434156168-d92e04b2f0c5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwxfHxub3RlYm9vayUyMHByZXNlbnRhdGlvbiUyMHN0dWR5aW5nJTIwY2xlYW4lMjBkZXNrfGVufDB8fHx8MTc4MzQ0NDk5MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Clean desk setup with notepad"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1698434156112-e7c2ed8ec7d4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxub3RlYm9vayUyMHByZXNlbnRhdGlvbiUyMHN0dWR5aW5nJTIwY2xlYW4lMjBkZXNrfGVufDB8fHx8MTc4MzQ0NDk5MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Headphones and studying notebook"
+      }
+    ],
+    "community_banners": [
+      {
+        "url": "https://images.unsplash.com/photo-1531545514256-b1400bc00f31?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwyfHxzdHVkZW50cyUyMGhhY2thdGhvbiUyMHdvcmtzaG9wJTIwY29sbGFib3JhdGluZ3xlbnwwfHx8fDE3ODM0NDQ5OTJ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Students collaborating in hackathon workshop"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwxfHxzdHVkZW50cyUyMGhhY2thdGhvbiUyMHdvcmtzaG9wJTIwY29sbGFib3JhdGluZ3xlbnwwfHx8fDE3ODM0NDQ5OTJ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Group of students working together on a laptop"
+      }
+    ],
+    "impact_screen": [
+      {
+        "url": "https://images.unsplash.com/photo-1702078545092-94a4d39be55c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxnbG93aW5nJTIwbWFnaWNhbCUyMHRyZWUlMjBkYXJrJTIwbmlnaHQlMjBhYnN0cmFjdHxlbnwwfHx8Ymx1ZXwxNzgzNDQ0OTkxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Glowing blue magical tree abstract dark"
+      }
+    ]
+  },
+  "animation_and_motion": {
+    "page_transitions": "Smooth slide-up from bottom for full-screen modals (Book Session). Horizontal slide for standard navigation.",
+    "interactions": "Scale down slightly on button press (0.95 active state). Soft fade-in for images.",
+    "success": "Lottie animation (check mark + confetti) on successful booking or resource upload."
+  },
+  "testing": {
+    "requirements": "All interactive components must have data-testid attributes.",
+    "examples": [
+      "data-testid='home-learn-pillar'",
+      "data-testid='mentor-card-book-btn'",
+      "data-testid='category-chip-academics'"
+    ]
+  }
+}
