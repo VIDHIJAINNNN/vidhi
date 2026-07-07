@@ -1,0 +1,50 @@
+{
+  "summary": "LEGACY backend fully tested end-to-end via public URL. 32/32 pytest tests pass covering health, auth (guest/me/logout), mentors (list/filter/search/detail/reviews/404), categories (15), vault (9 items + collections grouping), careers (8 + detail), community events (6 + kind filter), bookings (mock payment + sessions counter increment), impact stats, AI Career Compass Claude Sonnet 4.5 (non-stream + SSE stream + history), MongoDB _id leak checks, and 401 coverage on all authenticated endpoints. No CORS issues. One intermittent 502 on POST /api/career-chat was observed in the first run (LiteLLM 'Budget has been exceeded! Current cost: 0.0, Max budget: 0.0' error from the Emergent LLM proxy) but disappeared on retry — the AI integration is functionally working (verified via curl with real Claude output). Main agent should be aware of this transient LLM budget error and consider adding a retry/backoff wrapper for robustness.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/career-chat",
+        "issue": "Intermittent 502 from upstream LiteLLM proxy with 'Budget has been exceeded! Current cost: 0.0, Max budget: 0.0'. Recovered on retry. Consider a single retry/backoff for transient LLM upstream errors and returning a clearer 503 (Service Unavailable) instead of 502 so clients can retry."
+      },
+      {
+        "endpoint": "POST /api/career-chat/stream",
+        "issue": "On LLM failure the stream yields 'data: [error: ...]' but still terminates with 'data: [DONE]'. Frontend must specifically detect the [error:] prefix and surface it — otherwise it looks like a normal empty response."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_legacy_backend.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Wrap emergentintegrations LlmChat.send_message / stream_message with a single retry on litellm.BadRequestError('Budget has been exceeded') / 5xx before returning 502.",
+    "OPTIONAL: On the frontend, when consuming /api/career-chat/stream, detect chunks starting with '[error:' and show a friendly retry UI.",
+    "OPTIONAL: Non-streaming replay in /api/career-chat re-sends the full prior history through LlmChat.send_message, which duplicates LLM cost & latency on every message. Consider building an initial history via LlmChat's own memory or skipping replay — the SDK already persists per session_id.",
+    "OPTIONAL: Fix pytest deprecation warning — session_id fixture in TestCareerChat should be @classmethod or module-scoped."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 574 lines — approaching the 700-line threshold; consider splitting into routers/ (auth, mentors, vault, careers, community, chat).",
+    "Auth uses raw session tokens with no HMAC/signature; acceptable for MVP but flag before prod.",
+    "get_current_user returns the entire user document; safe (no _id), but consider a UserOut projection for tighter contracts.",
+    "on_event('startup')/('shutdown') are deprecated in FastAPI; migrate to lifespan handlers.",
+    "seed_data on every startup uses count==0 gate — idempotent and safe."
+  ],
+  "updated_files": [
+    "/app/backend/tests/conftest.py (new)",
+    "/app/backend/tests/test_legacy_backend.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "N/A (backend-only testing requested)"},
+  "seed_data_creation": "No new seed data. Backend auto-seeds 6 mentors, 9 vault items, 8 careers, 6 events, 5 reviews on startup as expected. Test-created bookings prefixed with TEST_ in notes.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Public base URL is EXPO_PUBLIC_BACKEND_URL in /app/frontend/.env (=https://knowledge-vault-201.preview.emergentagent.com). All 32 backend tests live in /app/backend/tests/test_legacy_backend.py — reuse them. Guest login (POST /api/auth/guest) is the reliable way to obtain a Bearer token for authenticated tests. LLM chat can be transiently flaky due to Emergent LLM proxy budget errors — one-retry is usually sufficient. Booking test mutates mentor.sessions counter for mnt_ananya; downstream tests that hard-code that value should read it dynamically.",
+  "rca_of_issue": "First-run failure of test_career_chat_nonstream (502 Bad Gateway). RCA: backend log showed 'litellm.BadRequestError: OpenAIException - Budget has been exceeded! Current cost: 0.0, Max budget: 0.0' from the LiteLLM proxy behind the Emergent LLM key. server.py catches this and re-raises as HTTPException 502. Reproduction: bursty parallel calls to /api/career-chat can trigger transient budget errors. Mitigation: retry once with exponential backoff before returning 502; or map budget errors to 429/503 so clients auto-retry. Verified fix path via direct curl — both non-stream and stream endpoints returned real Claude Sonnet 4.5 content after the transient error cleared."
+}
