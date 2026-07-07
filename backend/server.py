@@ -174,14 +174,14 @@ async def logout(request: Request, user: Dict[str, Any] = Depends(get_current_us
 @api.post("/auth/guest")
 async def guest_login():
     """Create/reuse a demo account for reviewers who cannot complete Google OAuth."""
-    email = "vidhi.sharma@legacy.demo"
+    email = "vidhi.jain@legacy.demo"
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         user = {
             "user_id": user_id,
             "email": email,
-            "name": "Vidhi Sharma",
+            "name": "Vidhi Jain",
             "picture": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80",
             "role": "student",
             "grade": "Class 11",

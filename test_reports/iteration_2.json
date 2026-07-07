@@ -1,0 +1,39 @@
+{
+  "summary": "Both bug fixes verified end-to-end on the public URL. (1) SPLASH SCREEN: renders LEGACY brand [testID=splash-brand], tagline 'Knowledge Never Graduates.' [testID=splash-tagline], subline 'A Student Knowledge Ecosystem', 🌳 tree logo, and a large blue 'Get Started' button [testID=splash-get-started-btn]. Tapping it correctly navigates first-time users to /onboarding. (2) VIDHI SHARMA -> VIDHI JAIN RENAME verified everywhere: POST /api/auth/guest returns name='Vidhi Jain' + email='vidhi.jain@legacy.demo'; GET /api/auth/me returns the same; login demo button label reads 'Try Demo (Vidhi Jain)'; home greeting shows first name 'Vidhi'; profile shows full 'Vidhi Jain'. Regression: all 32/32 pytest backend tests pass (health, auth, mentors, categories, vault, careers, community, bookings mock payment, impact, Claude Sonnet 4.5 career-chat non-stream + SSE stream + history, and 401 coverage on 7 unauth paths). No 'Vidhi Sharma' or 'vidhi.sharma@legacy.demo' remain anywhere in code/db (only unrelated seed mentor 'Advait Sharma' persists — expected). No red screens, no navigation errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/career-chat", "issue": "Same transient LiteLLM 'Budget exceeded' 502 as iteration_1 can still occur — did NOT reproduce this run, but recommend a single-retry/backoff wrapper for robustness."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "splash / global", "issues": ["Non-blocking RN-web console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' — originates from /app/frontend/src/theme.ts shadow presets applied via style prop. Consider migrating to boxShadow for react-native-web 0.19+ / RN 0.76+ silence."]}
+    ],
+    "react_native_issues": [
+      {"component": "shadow style props (global)", "issue": "shadow* props deprecated on react-native-web. Reference: /app/frontend/src/theme.ts (shadow.medium / shadow.soft). Prefer boxShadow or Platform.select to switch web vs native."},
+      {"component": "props.pointerEvents", "issue": "'props.pointerEvents is deprecated. Use style.pointerEvents' warning observed after guest login navigation. Likely from an animated overlay in a tab or the Login screen — move pointerEvents into style={{pointerEvents: 'none'}}."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_legacy_backend.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "None blocking. Optional: (a) migrate shadow* -> boxShadow to silence RN-web deprecation warnings; (b) move pointerEvents from props to style; (c) wrap LlmChat calls with 1-retry on litellm budget errors and map to 503."
+  ],
+  "critical_code_review_comments": [
+    "server.py still 574 lines — consider splitting into routers/ before crossing 700.",
+    "Splash screen index.tsx logic is clean and testable; testIDs correctly placed on interactive + key text elements."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (32/32)", "frontend": "100% (splash + rename verified end-to-end)"},
+  "seed_data_creation": "None. Backend auto-seeds are unchanged. Old 'vidhi.sharma@legacy.demo' user is no longer in DB (guest_login now creates 'vidhi.jain@legacy.demo' only).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public URL EXPO_PUBLIC_BACKEND_URL in /app/frontend/.env. Splash screen testIDs: splash-brand, splash-tagline, splash-get-started-btn. First-time flow: /(splash) -> tap Get Started -> /onboarding -> Skip/Continue -> /login -> guest-signin-btn -> /(tabs). Home greeting testID='home-username' contains a sibling 👋 emoji, so DOM text_content returns 'Vidhi 👋' — actual first-name text is 'Vidhi'. Profile testID='profile-username' returns exact 'Vidhi Jain'.",
+  "rca_of_issue": "N/A — this iteration was verification of previously-applied fixes; both fixes work as designed. No new bugs introduced."
+}

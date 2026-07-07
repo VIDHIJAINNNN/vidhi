@@ -131,7 +131,7 @@ export default function Login() {
           ) : (
             <>
               <Ionicons name="sparkles" size={18} color={colors.primary} />
-              <Text style={styles.guestTxt}>Try Demo (Vidhi Sharma)</Text>
+              <Text style={styles.guestTxt}>Try Demo (Vidhi Jain)</Text>
             </>
           )}
         </TouchableOpacity>

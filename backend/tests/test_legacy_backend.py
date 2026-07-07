@@ -19,15 +19,15 @@ class TestAuth:
         assert r.status_code == 200
         d = r.json()
         assert "token" in d and d["token"]
-        assert d["user"]["name"] == "Vidhi Sharma"
-        assert d["user"]["email"] == "vidhi.sharma@legacy.demo"
+        assert d["user"]["name"] == "Vidhi Jain"
+        assert d["user"]["email"] == "vidhi.jain@legacy.demo"
         assert "_id" not in d["user"]
 
     def test_me_with_bearer(self, api_client, base_url, guest_auth):
         r = api_client.get(f"{base_url}/api/auth/me", headers=guest_auth["headers"])
         assert r.status_code == 200
         u = r.json()
-        assert u["email"] == "vidhi.sharma@legacy.demo"
+        assert u["email"] == "vidhi.jain@legacy.demo"
         assert "_id" not in u
 
     def test_me_without_bearer_401(self, api_client, base_url):
