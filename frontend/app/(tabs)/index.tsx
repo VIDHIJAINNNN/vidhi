@@ -149,7 +149,11 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 26 }}> 👋</Text>
             </Text>
           </View>
-          <TouchableOpacity style={styles.iconBtn} testID="home-notifications">
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => router.push("/notifications")}
+            testID="home-notifications"
+          >
             <Ionicons name="notifications-outline" size={22} color={colors.text} />
             <View style={styles.dot} />
           </TouchableOpacity>
@@ -194,6 +198,27 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Thrive quick check-in */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.thriveWidget}
+          onPress={() => router.push("/(tabs)/thrive")}
+          testID="home-thrive-widget"
+        >
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Ionicons name="leaf" size={14} color="#059669" />
+              <Text style={styles.thriveKicker}>TODAY'S CHECK-IN</Text>
+            </View>
+            <Text style={styles.thriveTitle}>How are you feeling today?</Text>
+            <View style={styles.thriveEmojiRow}>
+              {["😁", "😊", "😐", "😟", "😞", "😴"].map((e) => (
+                <Text key={e} style={styles.thriveEmoji}>{e}</Text>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
 
         {/* Become a Mentor Banner */}
         <TouchableOpacity
@@ -281,6 +306,7 @@ export default function HomeScreen() {
               key={v.vault_id}
               activeOpacity={0.9}
               style={styles.vaultCard}
+              onPress={() => router.push(`/vault/${v.vault_id}` as any)}
               testID={`vault-card-${v.vault_id}`}
             >
               <Image source={{ uri: v.cover }} style={styles.vaultCover} />
@@ -330,7 +356,13 @@ export default function HomeScreen() {
         </View>
         <View style={{ paddingHorizontal: 20 }}>
           {events.slice(0, 2).map((e) => (
-            <TouchableOpacity key={e.event_id} style={styles.workshopCard} activeOpacity={0.9}>
+            <TouchableOpacity
+              key={e.event_id}
+              style={styles.workshopCard}
+              activeOpacity={0.9}
+              onPress={() => router.push(`/event/${e.event_id}` as any)}
+              testID={`workshop-${e.event_id}`}
+            >
               <Image source={{ uri: e.cover }} style={styles.workshopImg} />
               <View style={{ flex: 1, padding: 12 }}>
                 <Text style={styles.workshopTitle} numberOfLines={2}>{e.title}</Text>
@@ -608,4 +640,17 @@ const styles = StyleSheet.create({
   impactCaption: { color: "rgba(255,255,255,0.6)", fontSize: 10, fontWeight: "700", letterSpacing: 2 },
   impactTitle: { color: "#fff", fontSize: 18, fontWeight: "700", marginTop: 4 },
   impactDesc: { color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 4 },
+  thriveWidget: {
+    marginHorizontal: 24,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+  },
+  thriveKicker: { fontSize: 10, fontWeight: "700", color: "#059669", letterSpacing: 1.2 },
+  thriveTitle: { fontSize: 15, fontWeight: "700", color: "#065F46", marginTop: 6 },
+  thriveEmojiRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
+  thriveEmoji: { fontSize: 26 },
 });

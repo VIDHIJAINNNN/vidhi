@@ -90,6 +90,7 @@ export default function Community() {
               key={e.event_id}
               style={styles.card}
               activeOpacity={0.9}
+              onPress={() => router.push(`/event/${e.event_id}` as any)}
               testID={`event-${e.event_id}`}
             >
               <Image source={{ uri: e.cover }} style={styles.cover} />

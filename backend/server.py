@@ -66,6 +66,40 @@ class CareerChatRequest(BaseModel):
     message: str
 
 
+class MentorApplication(BaseModel):
+    full_name: str
+    grade: str
+    school: str
+    subjects: List[str]
+    achievements: str
+    bio: str
+    hourly_rate: int
+    email: Optional[str] = None
+
+
+class EventRSVP(BaseModel):
+    event_id: str
+
+
+class MoodEntry(BaseModel):
+    mood: str  # amazing | good | okay | stressed | overwhelmed | burnt_out
+
+
+class JournalEntry(BaseModel):
+    went_well: str = ""
+    challenged: str = ""
+    grateful: str = ""
+    tomorrow: str = ""
+
+
+class ChallengeComplete(BaseModel):
+    challenge_id: str
+
+
+class Encouragement(BaseModel):
+    message: str
+
+
 # ---------- Helpers ----------
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -278,6 +312,14 @@ async def vault_collections():
     return result
 
 
+@api.get("/vault/{vault_id}")
+async def get_vault_item(vault_id: str):
+    doc = await db.vault.find_one({"vault_id": vault_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Vault item not found")
+    return doc
+
+
 @api.post("/vault/{vault_id}/bookmark")
 async def bookmark_vault(vault_id: str, user: Dict[str, Any] = Depends(get_current_user)):
     exists = await db.bookmarks.find_one({"user_id": user["user_id"], "vault_id": vault_id})
@@ -315,6 +357,248 @@ async def community_events(kind: Optional[str] = None):
         query["kind"] = kind
     docs = await db.events.find(query, {"_id": 0}).to_list(100)
     return docs
+
+
+@api.get("/community/events/{event_id}")
+async def get_event(event_id: str):
+    doc = await db.events.find_one({"event_id": event_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Event not found")
+    return doc
+
+
+@api.post("/community/events/{event_id}/rsvp")
+async def rsvp_event(event_id: str, user: Dict[str, Any] = Depends(get_current_user)):
+    event = await db.events.find_one({"event_id": event_id}, {"_id": 0})
+    if not event:
+        raise HTTPException(404, "Event not found")
+    existing = await db.rsvps.find_one({"user_id": user["user_id"], "event_id": event_id})
+    if existing:
+        await db.rsvps.delete_one({"user_id": user["user_id"], "event_id": event_id})
+        await db.events.update_one({"event_id": event_id}, {"$inc": {"attendees": -1}})
+        return {"registered": False}
+    await db.rsvps.insert_one({
+        "user_id": user["user_id"], "event_id": event_id, "created_at": _now(),
+    })
+    await db.events.update_one({"event_id": event_id}, {"$inc": {"attendees": 1}})
+    # notification
+    await _notify(user["user_id"], "event_rsvp", f"You're registered for {event['title']}", event.get("cover"))
+    return {"registered": True}
+
+
+@api.get("/community/my-rsvps")
+async def my_rsvps(user: Dict[str, Any] = Depends(get_current_user)):
+    docs = await db.rsvps.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(100)
+    return [d["event_id"] for d in docs]
+
+
+# ---------- Mentor Applications ----------
+@api.post("/mentor-applications")
+async def apply_mentor(payload: MentorApplication, user: Dict[str, Any] = Depends(get_current_user)):
+    app_id = f"app_{uuid.uuid4().hex[:10]}"
+    doc = {
+        "app_id": app_id,
+        "user_id": user["user_id"],
+        "email": payload.email or user["email"],
+        "full_name": payload.full_name,
+        "grade": payload.grade,
+        "school": payload.school,
+        "subjects": payload.subjects,
+        "achievements": payload.achievements,
+        "bio": payload.bio,
+        "hourly_rate": payload.hourly_rate,
+        "status": "pending",
+        "created_at": _iso(_now()),
+    }
+    await db.mentor_applications.insert_one(doc.copy())
+    await _notify(
+        user["user_id"], "mentor_application",
+        "Your mentor application was received! Our team will review it in 48 hours.",
+        None,
+    )
+    return doc
+
+
+@api.get("/mentor-applications/mine")
+async def my_application(user: Dict[str, Any] = Depends(get_current_user)):
+    doc = await db.mentor_applications.find_one({"user_id": user["user_id"]}, {"_id": 0}, sort=[("created_at", -1)])
+    return doc
+
+
+# ---------- Notifications ----------
+async def _notify(user_id: str, kind: str, message: str, cover: Optional[str] = None):
+    await db.notifications.insert_one({
+        "notif_id": f"n_{uuid.uuid4().hex[:10]}",
+        "user_id": user_id,
+        "kind": kind,
+        "message": message,
+        "cover": cover,
+        "read": False,
+        "created_at": _now(),
+    })
+
+
+@api.get("/notifications")
+async def notifications(user: Dict[str, Any] = Depends(get_current_user)):
+    docs = await db.notifications.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    for d in docs:
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = _iso(d["created_at"])
+    # Seed a few welcome notifications if empty
+    if not docs:
+        seed = [
+            {"kind": "welcome", "message": "Welcome to LEGACY! Explore the 4 pillars and start your journey."},
+            {"kind": "tip", "message": "Featured mentor: Ananya Jain — Business Conclave Winner. Book a session!"},
+            {"kind": "vault", "message": "New in the Vault: MIT Scholarship Essay by Riya Gupta."},
+        ]
+        for s in seed:
+            await _notify(user["user_id"], s["kind"], s["message"])
+        docs = await db.notifications.find(
+            {"user_id": user["user_id"]}, {"_id": 0}
+        ).sort("created_at", -1).to_list(50)
+        for d in docs:
+            if isinstance(d.get("created_at"), datetime):
+                d["created_at"] = _iso(d["created_at"])
+    return docs
+
+
+@api.post("/notifications/read-all")
+async def read_all(user: Dict[str, Any] = Depends(get_current_user)):
+    await db.notifications.update_many({"user_id": user["user_id"]}, {"$set": {"read": True}})
+    return {"ok": True}
+
+
+# ---------- Thrive (Well-being) ----------
+@api.post("/thrive/mood")
+async def log_mood(payload: MoodEntry, user: Dict[str, Any] = Depends(get_current_user)):
+    doc = {
+        "mood_id": f"m_{uuid.uuid4().hex[:10]}",
+        "user_id": user["user_id"],
+        "mood": payload.mood,
+        "created_at": _now(),
+    }
+    await db.moods.insert_one(doc.copy())
+    doc["created_at"] = _iso(doc["created_at"])
+    return doc
+
+
+@api.get("/thrive/mood/history")
+async def mood_history(user: Dict[str, Any] = Depends(get_current_user)):
+    docs = await db.moods.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(30)
+    for d in docs:
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = _iso(d["created_at"])
+    return docs
+
+
+@api.post("/thrive/journal")
+async def save_journal(payload: JournalEntry, user: Dict[str, Any] = Depends(get_current_user)):
+    doc = {
+        "journal_id": f"j_{uuid.uuid4().hex[:10]}",
+        "user_id": user["user_id"],
+        "went_well": payload.went_well,
+        "challenged": payload.challenged,
+        "grateful": payload.grateful,
+        "tomorrow": payload.tomorrow,
+        "created_at": _now(),
+    }
+    await db.journals.insert_one(doc.copy())
+    doc["created_at"] = _iso(doc["created_at"])
+    return doc
+
+
+@api.get("/thrive/journal")
+async def my_journals(user: Dict[str, Any] = Depends(get_current_user)):
+    docs = await db.journals.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(30)
+    for d in docs:
+        if isinstance(d.get("created_at"), datetime):
+            d["created_at"] = _iso(d["created_at"])
+    return docs
+
+
+@api.get("/thrive/challenges")
+async def daily_challenges(user: Dict[str, Any] = Depends(get_current_user)):
+    day = _now().date().isoformat()
+    challenges = [
+        {"id": "water", "icon": "water", "title": "Drink 2 litres of water", "color": "#0EA5E9"},
+        {"id": "study30", "icon": "book", "title": "Study 30 min distraction-free", "color": "#8B5CF6"},
+        {"id": "walk", "icon": "walk", "title": "Take a 15-minute walk", "color": "#10B981"},
+        {"id": "sleep", "icon": "moon", "title": "Sleep before 11 PM", "color": "#6366F1"},
+        {"id": "phone", "icon": "phone-portrait", "title": "Phone-free study block", "color": "#F97316"},
+    ]
+    done = await db.challenge_completions.find(
+        {"user_id": user["user_id"], "day": day}, {"_id": 0}
+    ).to_list(20)
+    done_ids = {d["challenge_id"] for d in done}
+    return [{**c, "done": c["id"] in done_ids, "day": day} for c in challenges]
+
+
+@api.post("/thrive/challenges/complete")
+async def complete_challenge(payload: ChallengeComplete, user: Dict[str, Any] = Depends(get_current_user)):
+    day = _now().date().isoformat()
+    await db.challenge_completions.update_one(
+        {"user_id": user["user_id"], "day": day, "challenge_id": payload.challenge_id},
+        {"$set": {"user_id": user["user_id"], "day": day, "challenge_id": payload.challenge_id, "created_at": _now()}},
+        upsert=True,
+    )
+    return {"ok": True, "challenge_id": payload.challenge_id, "day": day}
+
+
+@api.get("/thrive/stories")
+async def thrive_stories():
+    return [
+        {"id": "s1", "title": "How I Overcame Board Exam Anxiety", "author": "Advait Sharma", "avatar": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&q=80", "badge": "Board Topper", "read_min": 4,
+         "body": "By Class 12 board exams, I was averaging 4 hours of sleep. My hands would shake during mock tests. Here's what actually worked... Read on for my 5-step protocol."},
+        {"id": "s2", "title": "My Biggest Mistake During CUET Prep", "author": "Ananya Jain", "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80", "badge": "SRCC Selected", "read_min": 3,
+         "body": "I over-prepared for GK and completely ignored Quant. Rank crashed by 400. Here's what I'd do differently."},
+        {"id": "s3", "title": "What I Learned After Failing My First Accounts Test", "author": "Kabir Rao", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80", "badge": "Founder", "read_min": 5,
+         "body": "Got a 12/25 in Class 11 Accounts. Cried for a day. Then I did something my teacher didn't expect..."},
+        {"id": "s4", "title": "How I Balanced MUN and Studies", "author": "Arjun Mehta", "avatar": "https://images.unsplash.com/photo-1544168190-79c17527004f?w=200&q=80", "badge": "HMUN Finalist", "read_min": 4,
+         "body": "Everyone said pick one. I refused. Here's my exact weekly schedule that kept me sane."},
+    ]
+
+
+@api.get("/thrive/groups")
+async def thrive_groups():
+    return [
+        {"id": "g1", "icon": "📘", "name": "Board Exam Warriors", "members": 1240, "status": "Live study session", "next": "Today, 8 PM"},
+        {"id": "g2", "icon": "📈", "name": "Commerce Champions", "members": 862, "status": "Weekly doubt clearing", "next": "Sat, 10 AM"},
+        {"id": "g3", "icon": "🎯", "name": "CUET Prep 2026", "members": 1750, "status": "Mock test week", "next": "Sun, 3 PM"},
+        {"id": "g4", "icon": "💼", "name": "IPMAT Aspirants", "members": 428, "status": "IIM alumni AMA", "next": "Fri, 7 PM"},
+        {"id": "g5", "icon": "🎤", "name": "MUN Society", "members": 980, "status": "Practice conference", "next": "Sat, 4 PM"},
+        {"id": "g6", "icon": "⏳", "name": "Productivity Club", "members": 610, "status": "Pomodoro squad live", "next": "Every weekday, 6 PM"},
+    ]
+
+
+@api.get("/thrive/wellness-summary")
+async def wellness_summary(user: Dict[str, Any] = Depends(get_current_user)):
+    from collections import Counter
+    moods = await db.moods.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(30)
+    counts = Counter(m["mood"] for m in moods)
+    journals = await db.journals.count_documents({"user_id": user["user_id"]})
+    completions = await db.challenge_completions.count_documents({"user_id": user["user_id"]})
+    return {
+        "total_moods": len(moods),
+        "top_mood": (counts.most_common(1)[0][0] if counts else "okay"),
+        "journal_entries": journals,
+        "challenges_completed": completions,
+        "focus_sessions": 5,
+        "study_hours": 12,
+    }
+
+
+@api.post("/thrive/encourage")
+async def send_encouragement(payload: Encouragement, user: Dict[str, Any] = Depends(get_current_user)):
+    # Anonymous — just record as sent, no recipient
+    await db.encouragements.insert_one({
+        "id": f"e_{uuid.uuid4().hex[:10]}",
+        "from_user_id": user["user_id"],
+        "message": payload.message,
+        "created_at": _now(),
+    })
+    return {"sent": True}
 
 
 # ---------- Bookings (mock payment) ----------
@@ -384,7 +668,7 @@ async def career_chat_stream(payload: CareerChatRequest, user: Dict[str, Any] = 
         "created_at": _now(),
     })
 
-    # Rebuild history from db to keep context (send as one prompt via multi-turn)
+    # Rebuild history from db to keep context. Cap to last ~6 turns for speed.
     history = await db.chat_messages.find(
         {"session_id": payload.session_id}, {"_id": 0}
     ).sort("created_at", 1).to_list(50)
@@ -392,7 +676,7 @@ async def career_chat_stream(payload: CareerChatRequest, user: Dict[str, Any] = 
     system = (
         f"You are Career Compass, a warm, wise senior-student mentor inside LEGACY app. "
         f"You give practical, honest, motivating career advice about {career_name} to Indian "
-        f"school students (grades 6-12). Be concise (3-5 short paragraphs max). Use bullet "
+        f"school students (grades 6-12). Be concise (2-4 short paragraphs max). Use bullet "
         f"points when listing steps. Suggest colleges, skills, competitions, and next actions. "
         f"Never invent statistics. End with one thoughtful follow-up question."
     )
@@ -401,19 +685,18 @@ async def career_chat_stream(payload: CareerChatRequest, user: Dict[str, Any] = 
         api_key=EMERGENT_LLM_KEY,
         session_id=payload.session_id,
         system_message=system,
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    ).with_model("anthropic", "claude-haiku-4-5-20251001")
 
-    # Replay prior turns except the last user message we just added
-    prior = history[:-1]
+    # Replay only the last few user turns for context (speed vs memory tradeoff)
+    prior = [m for m in history[:-1] if m["role"] == "user"][-3:]
     for m in prior:
-        if m["role"] == "user":
-            try:
-                async for _ev in chat.stream_message(UserMessage(text=m["text"])):
-                    if isinstance(_ev, StreamDone):
-                        break
-            except Exception as e:
-                logger.warning(f"replay error: {e}")
-                break
+        try:
+            async for _ev in chat.stream_message(UserMessage(text=m["text"])):
+                if isinstance(_ev, StreamDone):
+                    break
+        except Exception as e:
+            logger.warning(f"replay error: {e}")
+            break
 
     async def generator():
         full = ""
@@ -478,7 +761,7 @@ async def career_chat_nonstream(payload: CareerChatRequest, user: Dict[str, Any]
         api_key=EMERGENT_LLM_KEY,
         session_id=payload.session_id,
         system_message=system,
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    ).with_model("anthropic", "claude-haiku-4-5-20251001")
 
     prior = history[:-1]
     for m in prior:
@@ -541,19 +824,25 @@ async def on_start():
 async def seed_data():
     from seed_data import SEED_MENTORS, SEED_VAULT, SEED_CAREERS, SEED_EVENTS, SEED_REVIEWS
 
-    if await db.mentors.count_documents({}) == 0:
+    # Force reseed to pick up new fields (content, long_description, more mentors/careers)
+    if await db.mentors.count_documents({}) != len(SEED_MENTORS):
+        await db.mentors.delete_many({})
         await db.mentors.insert_many([m.copy() for m in SEED_MENTORS])
         logger.info(f"Seeded {len(SEED_MENTORS)} mentors")
-    if await db.vault.count_documents({}) == 0:
+    if await db.vault.count_documents({}) != len(SEED_VAULT):
+        await db.vault.delete_many({})
         await db.vault.insert_many([v.copy() for v in SEED_VAULT])
         logger.info(f"Seeded {len(SEED_VAULT)} vault items")
-    if await db.careers.count_documents({}) == 0:
+    if await db.careers.count_documents({}) != len(SEED_CAREERS):
+        await db.careers.delete_many({})
         await db.careers.insert_many([c.copy() for c in SEED_CAREERS])
         logger.info(f"Seeded {len(SEED_CAREERS)} careers")
-    if await db.events.count_documents({}) == 0:
+    if await db.events.count_documents({}) != len(SEED_EVENTS):
+        await db.events.delete_many({})
         await db.events.insert_many([e.copy() for e in SEED_EVENTS])
         logger.info(f"Seeded {len(SEED_EVENTS)} events")
-    if await db.reviews.count_documents({}) == 0:
+    if await db.reviews.count_documents({}) != len(SEED_REVIEWS):
+        await db.reviews.delete_many({})
         await db.reviews.insert_many([r.copy() for r in SEED_REVIEWS])
         logger.info(f"Seeded {len(SEED_REVIEWS)} reviews")
 

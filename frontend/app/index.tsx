@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -122,7 +123,10 @@ export default function Splash() {
               />
             </Animated.View>
             <Animated.View style={[styles.logoCircle, logoStyle]} testID="splash-logo">
-              <LegacyLogo size={78} primary="#0F172A" leaf="#10B981" leafAlt="#34D399" />
+              <Image
+                source={require("../assets/images/legacy-logo.png")}
+                style={{ width: 92, height: 92, resizeMode: "contain" }}
+              />
             </Animated.View>
           </View>
 
@@ -136,7 +140,7 @@ export default function Splash() {
             style={[styles.tagline, taglineStyle, { fontFamily: bodyFontFamily }]}
             testID="splash-tagline"
           >
-            Knowledge Never Graduates.
+            Connecting minds, creating futures.
           </Animated.Text>
           <Animated.Text style={[styles.subline, taglineStyle, { fontFamily: captionFontFamily }]}>
             A Student Knowledge Ecosystem

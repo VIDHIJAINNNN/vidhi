@@ -88,7 +88,7 @@ export default function BecomeMentor() {
         <TouchableOpacity
           style={styles.applyBtn}
           activeOpacity={0.9}
-          onPress={() => router.push("/legacy")}
+          onPress={() => router.push("/mentor-apply")}
           testID="apply-now-btn"
         >
           <Text style={styles.applyTxt}>Apply Now</Text>

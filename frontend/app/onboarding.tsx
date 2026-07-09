@@ -34,7 +34,7 @@ const SLIDES = [
   {
     title: "Leave a Legacy.",
     subtitle:
-      "Your knowledge shouldn't graduate with you.",
+      "Connecting minds, creating futures.",
     image:
       "https://images.unsplash.com/photo-1509909756405-be0199881695?crop=entropy&cs=srgb&fm=jpg&w=1200&q=85",
   },
